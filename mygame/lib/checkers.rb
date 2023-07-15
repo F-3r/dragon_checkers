@@ -91,8 +91,50 @@ module Checkers
     end
   end
 
+  class Checkgroup
+    attr_reader :name, :caller, :block, :error, :printer, :run, :args
+
+    def initialize(name, caller, printer = Checkers.printer, run = Checkers.run, &block)
+      @name = name
+      @caller = caller
+      @block = block
+      @printer = printer
+      @run = run
+    end
+
+    def checklists
+      @checklists ||= []
+    end
+
+    def verify
+      printer.checkgroup self
+      printer.checkgroup_begin
+      checklists.each(&:verify)
+      printer.checkgroup_end
+    rescue StandardError => e
+      @error = e
+      run.fail(self)
+    end
+
+    def check(_)
+      raise StandardError, "Check called inside group."
+    end
+
+    def checklist(name = nil, &block)
+      checklists << Checklist.new(name, Kernel.caller, &block)
+    end
+
+    def group(name = nil, &block)
+      checklists << Checkgroup.new(name, Kernel.caller, &block)
+    end
+  end
+
   class Printer
     COLORS = { red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36, gray:  90 }.freeze
+
+    def initialize
+      @group_indent = 0
+    end
 
     def color(color, string)
       "\e[#{COLORS[color]}m#{string}\e[0m"
@@ -116,7 +158,20 @@ module Checkers
 
     def checklist(checklist)
       name = checklist.name ? blue(checklist.name) : blue(checklist.caller.first.split(":in").first)
-      print "\nChecking #{name}:  "
+      print "\n#{' ' * @group_indent}Checking #{name}:  "
+    end
+
+    def checkgroup_begin
+      @group_indent += 2
+    end
+
+    def checkgroup(checkgroup)
+      name = checkgroup.name ? blue(checkgroup.name) : blue(checkgroup.caller.first.split(":in").first)
+      print "\n#{' ' * @group_indent}Group #{name}:  "
+    end
+
+    def checkgroup_end
+      @group_indent -= 2
     end
 
     def summary passes, failures
@@ -130,11 +185,15 @@ module Checkers
           print red "#{i}) "
 
           if check.is_a? Check
-            print "#{check.message}" << gray(" (#{check.caller.first})")
+            print "#{check.message}" << gray(" (#{check.caller.first})\n")
           elsif check.is_a? Checklist
             name = check.name ? "'#{check.name}'" : ""
             trace = format_trace(check.error.backtrace)
             print "In checklist #{ blue "#{name}" } #{ gray "(#{check.caller.first})" }: #{red check.error.message} \n\n#{trace}\n\n"
+          elsif check.is_a? Checkgroup
+            name = check.name ? "'#{check.name}'" : ""
+            trace = format_trace(check.error.backtrace)
+            print "In group #{ blue "#{name}" } #{ gray "(#{check.caller.first})" }: #{red check.error.message} \n\n#{trace}\n\n"
           end
         end
         print green "All good!" if failures.empty? && total > 0
@@ -215,6 +274,12 @@ module Checkers
 
   def self.checklist(name = nil, &block)
     Checkers.checklists << Checklist.new(name, caller, &block)
+  end
+
+  def self.group(name = nil, &block)
+    group = Checkgroup.new(name, caller, &block)
+    group.instance_eval(&block)
+    Checkers.checklists << group
   end
 
   def self.define(&block)
