@@ -43,9 +43,10 @@ Checkers.checklist do
 end
 ```
 
-## How can I add my own checks?
+## can I add my own checks?
 
-Just open the `Checkers::Checks` module and add methods there, those will be available to send to your checks.
+well yeah. Just open the `Checkers::Checks` module and add methods there, those will be available to send to your checks.
+
 Take a look to the checks already implemented there, should be easy to add new ones!
 
 ## How can I change the reporting formatting?

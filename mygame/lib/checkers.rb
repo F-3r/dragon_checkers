@@ -6,22 +6,116 @@ module Checkers
   end
 
   module Checks
+    def ==(o)
+      check subject == o, "#{subject.inspect} should have been equal to #{o.inspect}, but it wasn't"
+    end
+
+    def same_as(o)
+      check subject.equal?(o), "#{subject.inspect} should have been the same object as #{o.inspect}, but it wasn't"
+    end
+
+    def same_value_and_type_than(o)
+      check subject.eql?(o), "#{subject.inspect} should have had the same value and type than #{o.inspect}, but it hadn't"
+    end
+
+    def includes(o)
+      check subject.include?(o), "#{subject.inspect} should have included #{o.inspect}, but didn't"
+    end
+
+    def contains(o)
+      check (subject - o).empty?, "#{subject.inspect} should have contained #{o.inspect}, but didn't"
+    end
+
+    def covers(o)
+      check (subject.respond_to?(:cover?) && subject.cover?(o)), "#{subject.inspect} should have contained #{o.inspect}, but didn't"
+    end
+
+    def starts_with(o)
+      check (subject.start_with?(o)), "#{subject.inspect} should have started with #{o.inspect}, but didn't"
+    end
+
+    def ends_with(o)
+      check (subject.end_with?(o)), "#{subject.inspect} should have ended with #{o.inspect}, but didn't"
+    end
+
+    ## Bools
+    # true
+    # false
+    # truthy
+    # falsey
+    # nil
+
+    def true
+      check subject.equal?(true), "#{subject.inspect} should have been true, but wasn't"
+    end
+
+    def false
+      check subject.equal?(false), "#{subject.inspect} should have been false, but wasn't"
+    end
+
+    def truthy
+      check (!!subject).equal?(true), "#{subject.inspect} should have been truthy, but wasn't"
+    end
+
+    def falsey
+      check (!!subject).equal?(false), "#{subject.inspect} should have been falsey, but wasn't"
+    end
+
+    def nil
+      check subject.nil?, "#{subject.inspect} should have been nil, but wasn't"
+    end
+
+    def >(o)
+      check subject > o, "#{subject.inspect} should have been greater than #{o.inspect}, but wasn't"
+    end
+
+    def >=(o)
+      check subject >= o, "#{subject.inspect} should have been greater or equal than #{o.inspect}, but wasn't"
+    end
+
+    def <(o)
+      check subject < o, "#{subject.inspect} should have been less than #{o.inspect}, but wasn't"
+    end
+
+    def <=(o)
+      check subject < o, "#{subject.inspect} should have been less or equal than #{o.inspect}, but wasn't"
+    end
+
+    def between(o1, o2)
+      check subject.between?(o1, o2), "#{subject.inspect} should have been between #{o1.inspect} and #{o2.inspect}, but wasn't"
+    end
+
+    def within(diff, o)
+      check subject.between?(o - diff, o + diff), "#{subject.inspect} should have been within #{diff} of #{o.inspect} and #{o2.inspect}, but wasn't"
+    end
+
+    ## Exceptions & throw
+    # raises
+    # check(->{}).throws :halt
+
+    ## Hashes
+    # has_key
+    # has_value
+
+    ## predicate checks
+    # instance_of
+    # responds_to
+    # custom predicates? => method missing?
+
+
+    ## changes
+    # check(-> { ... }).changes(-> {})
+
     def empty
       check subject.empty?, "#{subject.inspect} should be empty, but wasn't"
     end
 
-    def ==(o)
-      check subject == o, "#{subject.inspect} should be equal to #{o.inspect}, but wasn't"
-    end
-    alias :equals :==
+
 
     def matches(pattern)
       check subject.match(pattern), "#{subject.inspect} should match with #{pattern.inspect}, but didn't"
     end
 
-    def includes(o)
-      check subject.include?(o), "#{subject.inspect} should include #{o.inspect}, but doesn't"
-    end
 
     def counts(n)
       check subject.count == n, "#{subject.inspect} count should equal  #{n.inspect}, but was #{subject.count}"
