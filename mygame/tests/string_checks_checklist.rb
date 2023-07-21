@@ -1,8 +1,3 @@
-# includes
-# starts_with
-# ends_with
-# matches
-
 Checkers.checklist "Strings Checkers: #includes" do
   check("Hello Dragon Ruby").includes "Dragon"
   check("Hello Dragon Ruby").not.includes "slow"

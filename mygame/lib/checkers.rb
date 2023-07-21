@@ -1,13 +1,23 @@
 module Checkers
   module Sugar
-    def not; @inverted = !inverted; self; end
-    def is; self; end
-    def are; self; end
+    def not
+      @inverted = !inverted
+      self
+    end
+
+    def is
+      self
+    end
+
+    def are
+      self
+    end
   end
 
   module Checks
-    def ==(o)
-      check subject == o, "#{subject.inspect} should have been equal to #{o.inspect}, but it wasn't"
+    # Equality
+    def ==(other)
+      check subject == other, "#{subject.inspect} should have been equal to #{other.inspect}, but it wasn't"
     end
 
     def same_as(o)
@@ -18,6 +28,7 @@ module Checkers
       check subject.eql?(o), "#{subject.inspect} should have had the same value and type than #{o.inspect}, but it hadn't"
     end
 
+    # Collections
     def includes(o)
       check subject.include?(o), "#{subject.inspect} should have included #{o.inspect}, but didn't"
     end
@@ -30,21 +41,29 @@ module Checkers
       check (subject.respond_to?(:cover?) && subject.cover?(o)), "#{subject.inspect} should have contained #{o.inspect}, but didn't"
     end
 
+    def empty
+      check subject.empty?, "#{subject.inspect} should be empty, but wasn't"
+    end
+
+    def counts(n)
+      check subject.count == n, "#{subject.inspect} count should equal  #{n.inspect}, but was #{subject.count}"
+    end
+
+    # Strings
     def starts_with(o)
-      check (subject.start_with?(o)), "#{subject.inspect} should have started with #{o.inspect}, but didn't"
+      check subject.start_with?(o), "#{subject.inspect} should have started with #{o.inspect}, but didn't"
     end
 
     def ends_with(o)
-      check (subject.end_with?(o)), "#{subject.inspect} should have ended with #{o.inspect}, but didn't"
+      check subject.end_with?(o), "#{subject.inspect} should have ended with #{o.inspect}, but didn't"
     end
 
-    ## Bools
-    # true
-    # false
-    # truthy
-    # falsey
-    # nil
+    # DR does not have regex (yet)
+    # def matches(pattern)
+    #   check subject.match(pattern), "#{subject.inspect} should match with #{pattern.inspect}, but didn't"
+    # end
 
+    # Booleans & nils
     def true
       check subject.equal?(true), "#{subject.inspect} should have been true, but wasn't"
     end
@@ -65,20 +84,21 @@ module Checkers
       check subject.nil?, "#{subject.inspect} should have been nil, but wasn't"
     end
 
-    def >(o)
-      check subject > o, "#{subject.inspect} should have been greater than #{o.inspect}, but wasn't"
+    # Numerics
+    def >(other)
+      check subject > other, "#{subject.inspect} should have been greater than #{other.inspect}, but wasn't"
     end
 
-    def >=(o)
-      check subject >= o, "#{subject.inspect} should have been greater or equal than #{o.inspect}, but wasn't"
+    def >=(other)
+      check subject >= other, "#{subject.inspect} should have been greater or equal than #{other.inspect}, but wasn't"
     end
 
-    def <(o)
-      check subject < o, "#{subject.inspect} should have been less than #{o.inspect}, but wasn't"
+    def <(other)
+      check subject < other, "#{subject.inspect} should have been less than #{other.inspect}, but wasn't"
     end
 
-    def <=(o)
-      check subject < o, "#{subject.inspect} should have been less or equal than #{o.inspect}, but wasn't"
+    def <=(other)
+      check subject <= other, "#{subject.inspect} should have been less or equal than #{other.inspect}, but wasn't"
     end
 
     def between(o1, o2)
@@ -86,76 +106,78 @@ module Checkers
     end
 
     def within(diff, o)
-      check subject.between?(o - diff, o + diff), "#{subject.inspect} should have been within #{diff} of #{o.inspect} and #{o2.inspect}, but wasn't"
+      v1 = o - diff
+      v2 = o + diff
+
+      check subject.between?(v1, v2), "#{subject.inspect} should have been within #{diff} of #{v1.inspect} and #{v2.inspect}, but wasn't"
     end
 
     ## Exceptions & throw
-    # raises
-    # check(->{}).throws :halt
-
-    ## Hashes
-    # has_key
-    # has_value
-
-    ## predicate checks
-    # instance_of
-    # responds_to
-    # custom predicates? => method missing?
-
-
-    ## changes
-    # check(-> { ... }).changes(-> {})
-
-    def empty
-      check subject.empty?, "#{subject.inspect} should be empty, but wasn't"
-    end
-
-
-
-    def matches(pattern)
-      check subject.match(pattern), "#{subject.inspect} should match with #{pattern.inspect}, but didn't"
-    end
-
-
-    def counts(n)
-      check subject.count == n, "#{subject.inspect} count should equal  #{n.inspect}, but was #{subject.count}"
-    end
-
-    def instance_of(klass)
-      check subject.instance_of?(klass), "#{subject.inspect} should be instance of #{klass.inspect} instead of #{subject.class}"
-    end
-
     def raises(e)
       subject.call
-      self.message = "#{subject.inspect} should raise #{e.inspect}, but didn't"
+      self.message = "#{subject.inspect} should have raised #{e.inspect}, but didn't"
       run.fail(self)
     rescue e
       run.pass(self)
     end
+
+    def throws(symbol)
+      catch(symbol) do
+        subject.call
+        self.message = "#{subject.inspect} should have thrown #{symbol.inspect}, but didn't"
+        run.fail(self)
+      end
+      run.pass(self)
+    end
+
+    # Predicate Methods
+    def method_missing(method, *args)
+      if subject.respond_to?("#{method}?")
+        check subject.send("#{method}?", *args), "#{subject.inspect} should have been #{method} #{args}, but wasn't"
+      else
+        raise NoMethodError, "method"
+      end
+    end
+
+    def changes(result)
+      previous_result = result.call
+      subject.call
+      current_result = result.call
+      check previous_result != current_result, "#{subject.inspect} should have changed #{previous_result}, but didn't"
+    end
+
+    ## changes
+    # check(-> { ... }).changes(-> {})
+
+    # def instance_of(klass)
+    #   check subject.instance_of?(klass), "#{subject.inspect} should be instance of #{klass.inspect} instead of #{subject.class}"
+    # end
   end
 
   class Check
-    include Checks, Sugar
+    include Sugar
+    include Checks
     attr_reader :subject, :caller, :message, :inverted, :run
 
     def initialize(subject, caller, run = Checkers.run)
       @subject = subject
       @caller = caller
-      @message = ''
+      @message = ""
       @inverted = false
       @run = run
     end
 
-    def check(condition, msg = 'Check failed.')
+    def check(condition, msg = "Check failed.")
       self.message = msg
       condition = !condition if inverted
       condition ? run.pass(self) : run.fail(self)
-    rescue StandardError => e
+    rescue => e
       self.message = e.message
       run.fail(self)
     end
 
     private
+
     attr_writer :message
   end
 
@@ -175,7 +197,7 @@ module Checkers
     def verify
       printer.checklist self
       instance_eval(&block)
-    rescue StandardError => e
+    rescue => e
       @error = e
       run.fail(self)
     end
@@ -186,14 +208,14 @@ module Checkers
   end
 
   class Printer
-    COLORS = { red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36, gray:  90 }.freeze
+    COLORS = {red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36, gray: 90}.freeze
 
     def color(color, string)
       "\e[#{COLORS[color]}m#{string}\e[0m"
     end
 
     def print(m)
-      STDOUT.print m
+      $stdout.print m
     end
 
     COLORS.each do |name, _|
@@ -201,7 +223,7 @@ module Checkers
     end
 
     def pass(check)
-      print green '+'
+      print green "+"
     end
 
     def fail(check)
@@ -209,29 +231,29 @@ module Checkers
     end
 
     def checklist(checklist)
-      name = checklist.name ? blue(checklist.name) : blue(checklist.caller.first.split(":in").first)
+      name = blue(checklist.name || checklist.caller.first.split(":in").first)
       print "\nChecking #{name}:  "
     end
 
     def summary passes, failures
       failed = failures.count
       passed = passes.count
-      total  = failed + passed
+      total = failed + passed
 
       print "\n\n#{blue total} checks verified:  #{green passed} Passed   #{red failed} Failed\n\n"
 
-        failures.each.with_index do  |check, i|
-          print red "#{i}) "
+      failures.each.with_index do |check, i|
+        print red "#{i}) "
 
-          if check.is_a? Check
-            print "#{check.message}" << gray(" (#{check.caller.first})")
-          elsif check.is_a? Checklist
-            name = check.name ? "'#{check.name}'" : ""
-            trace = format_trace(check.error.backtrace)
-            print "In checklist #{ blue "#{name}" } #{ gray "(#{check.caller.first})" }: #{red check.error.message} \n\n#{trace}\n\n"
-          end
+        if check.is_a? Check
+          print check.message.to_s << gray(" (#{check.caller.first})")
+        elsif check.is_a? Checklist
+          name = check.name ? "'#{check.name}'" : ""
+          trace = format_trace(check.error.backtrace)
+          print "In checklist #{blue name.to_s} #{gray "(#{check.caller.first})"}: #{red check.error.message} \n\n#{trace}\n\n"
         end
-        print green "All good!" if failures.empty? && total > 0
+      end
+      print green "All good!" if failures.empty? && total > 0
     end
 
     def format_trace(trace)
@@ -244,8 +266,8 @@ module Checkers
 
     def initialize(printer)
       @failures = []
-      @passes   = []
-      @printer  = printer
+      @passes = []
+      @printer = printer
     end
 
     def pass(check)
