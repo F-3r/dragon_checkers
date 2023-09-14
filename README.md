@@ -4,12 +4,12 @@ _No one likes their dragon crashing in mid-flight..._
 
 ## What is this thing?
 
-Dragon Checkers is a small testing library for [DragonRuby](dragonruby.itch.io/) with a checklist-oriented DSL
+Preflight is a small testing library for [DragonRuby](dragonruby.itch.io/) with a checklist-oriented DSL
 
 ## How can I install it?
 
-You can install it with `$gtk.download_stb_rb "f-3r", "dragon-checkers", "lib/checkers.rb"` or you can
-copy `lib/checkers.rb` into to your project.
+You can install it with `$gtk.download_stb_rb "f-3r", "preflight", "lib/preflight.rb"` or you can
+copy `lib/preflight.rb` into to your project.
 
 (You probably want to copy `tests/tests.rb` and `tests/run.rb` too (see following section))
 
@@ -31,7 +31,7 @@ Each checklist holds an instance of `GTK::Args` (like the one you receive as par
 Here an example transcribed from [DragonRuby docs](http://docs.dragonruby.org.s3-website-us-east-1.amazonaws.com/#----physics-and-collisions---collision-with-object-removal---tests-rb):
 
 ```ruby
-Checkers.checklist do
+Preflight.checklist do
   game = MySuperHappyFunGame.new
   game.args = args
   game.tick
