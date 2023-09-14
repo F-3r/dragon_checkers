@@ -45,9 +45,9 @@ end
 
 ## can I add my own checks?
 
-well yeah. Just open the `Checkers::Checks` module and add methods there, those will be available to send to your checks.
+well yeah. Just open the `Preflight::Checks` module and add methods there, those will be available to send to your checks.
 
 Take a look to the checks already implemented there, should be easy to add new ones!
 
 ## How can I change the reporting formatting?
-Similarly, open the `Checkers::Printer` class and override or replace methods in there. Ugly and effective :rofl:
+Similarly, open the `Preflight::Printer` class and override or replace methods in there. Ugly and effective :rofl:

@@ -1,4 +1,4 @@
-module Checkers
+module Preflight
   module Sugar
     def not
       @inverted = !inverted
@@ -159,7 +159,7 @@ module Checkers
     include Checks
     attr_reader :subject, :caller, :message, :inverted, :run
 
-    def initialize(subject, caller, run = Checkers.run)
+    def initialize(subject, caller, run = Preflight.run)
       @subject = subject
       @caller = caller
       @message = ""
@@ -184,7 +184,7 @@ module Checkers
   class Checklist
     attr_reader :name, :caller, :block, :error, :printer, :run, :args
 
-    def initialize(name, caller, printer = Checkers.printer, run = Checkers.run, &block)
+    def initialize(name, caller, printer = Preflight.printer, run = Preflight.run, &block)
       @name = name
       @caller = caller
       @block = block
@@ -257,7 +257,7 @@ module Checkers
     end
 
     def format_trace(trace)
-      trace.reject { |frame| frame.include? "checkers.rb" }.join("\n").gsub(":in ", " in ")
+      trace.reject { |frame| frame.include? "Preflight.rb" }.join("\n").gsub(":in ", " in ")
     end
   end
 
@@ -330,7 +330,7 @@ module Checkers
   end
 
   def self.checklist(name = nil, &block)
-    Checkers.checklists << Checklist.new(name, caller, &block)
+    Preflight.checklists << Checklist.new(name, caller, &block)
   end
 
   def self.define(&block)
@@ -338,16 +338,16 @@ module Checkers
   end
 
   def self.verify(&block)
-    Checkers.checklists.each do |checklist|
-      Checkers.before_blocks.each(&:call)
+    Preflight.checklists.each do |checklist|
+      Preflight.before_blocks.each(&:call)
       checklist.verify
-      Checkers.after_blocks.each(&:call)
+      Preflight.after_blocks.each(&:call)
     end
 
-    Checkers.run.results
+    Preflight.run.results
   end
 end
 
-def Checkers(&block)
-  Checkers.define(&block)
+def Preflight(&block)
+  Preflight.define(&block)
 end

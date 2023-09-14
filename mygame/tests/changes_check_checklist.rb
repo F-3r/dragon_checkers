@@ -9,7 +9,7 @@ class Who
   end
 end
 
-Checkers.checklist "Changes checkers: #changes" do
+Preflight.checklist "Changes Preflight: #changes" do
   a = Who.new
   check(-> { a.reverse! }).changes(-> { a.name })
 end

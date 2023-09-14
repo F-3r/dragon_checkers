@@ -1,26 +1,26 @@
-Checkers.checklist "Collection Checkers: #counts" do
+Preflight.checklist "Collection Preflight: #counts" do
   check([]).counts 0
   check(1..10).counts 10
 end
 
-Checkers.checklist "Collection Checkers: #includes" do
+Preflight.checklist "Collection Preflight: #includes" do
   check([1, 2, 3, 4, 5, 6]).includes 3
   check([1, 2, 3, 4, 5, 6]).not.includes 10
 end
 
-Checkers.checklist "Collection Checkers: #contains" do
+Preflight.checklist "Collection Preflight: #contains" do
   check([1, 2, 3]).contains [3, 1, 2]
   check([1, 2, 3]).not.contains [3, 1]
   check([1, 2, 3]).not.contains [0, 4]
 end
 
-Checkers.checklist "Collection Checkers: #covers" do
+Preflight.checklist "Collection Preflight: #covers" do
   check(1..10).covers 3
   check(1..10).not.covers 11
   check(1..10).not.covers 0
 end
 
-Checkers.checklist "Collection Checkers: #empty" do
+Preflight.checklist "Collection Preflight: #empty" do
   check([]).empty
   check("").empty
   check({}).empty

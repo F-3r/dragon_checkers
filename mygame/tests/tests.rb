@@ -1,4 +1,4 @@
-require 'lib/checkers.rb'
+require 'lib/preflight.rb'
 
 # In order to avoid asyncronous require issues
 # we follow the same strategy we use in games:
