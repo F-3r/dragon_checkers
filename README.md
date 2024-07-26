@@ -1,6 +1,6 @@
 # Preflight
 
-_No one likes their dragon crashing in mid-flight..._
+_No one likes their dragon crashing in mid-air..._
 
 ## What is this thing?
 
